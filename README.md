@@ -1,1 +1,722 @@
 # SCP173JThePeanut.github.io
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🃏 斗地主顺序 (3~2) · 物理交换</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+        }
+        body {
+            background: #1a2a32;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 10px;
+            padding: 10px;
+        }
+        .container {
+            max-width: 1200px;
+            width: 100%;
+            background: #f2f6fa;
+            padding: 25px 20px 30px;
+            border-radius: 40px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+            text-align: center;
+        }
+        h1 {
+            font-weight: 700;
+            font-size: 24px;
+            color: #0b2b3d;
+            margin-top: 0;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .subhead {
+            color: #4a637a;
+            font-size: 13px;
+            margin-bottom: 18px;
+            border-bottom: 2px dashed #cddae6;
+            padding-bottom: 12px;
+        }
+
+        .controls-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px 24px;
+            justify-content: center;
+            align-items: center;
+            background: #e3ebf3;
+            padding: 12px 20px;
+            border-radius: 30px;
+            margin-bottom: 20px;
+        }
+        .controls-row label {
+            font-weight: 600;
+            color: #1f3a4b;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .controls-row input[type="range"] {
+            width: 100px;
+            accent-color: #1a4b6d;
+        }
+        .controls-row .value-badge {
+            background: white;
+            padding: 0 10px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 14px;
+            border: 1px solid #cbd8e6;
+            min-width: 36px;
+            display: inline-block;
+        }
+        .algo-tabs {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .algo-tabs button {
+            background: #e3eaf1;
+            border: none;
+            padding: 6px 16px;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 13px;
+            color: #1f3a4b;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+        }
+        .algo-tabs button.active {
+            background: #1a4b6d;
+            color: white;
+            box-shadow: 0 4px 10px rgba(26, 75, 109, 0.3);
+            border-color: #0f3854;
+        }
+        .algo-tabs button:hover:not(.active) {
+            background: #cbd8e6;
+        }
+
+        .table-wrapper {
+            position: relative;
+            background: #26734a;
+            background-image: radial-gradient(circle at 20% 30%, #2f8f5a, #1a5a38);
+            border-radius: 28px;
+            padding: 20px 10px;
+            margin-bottom: 18px;
+            border: 4px solid #c89d5c;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.3), 0 8px 16px rgba(0,0,0,0.2);
+            min-height: 150px;
+            width: 100%;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .card {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #ffffff;
+            border-radius: 6px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2), 0 0 0 1px rgba(255,255,255,0.1);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border: 2px solid #e0e0e0;
+            font-family: 'Georgia', serif;
+            user-select: none;
+            transition: left 0.12s cubic-bezier(0.34, 1.56, 0.64, 1), 
+                        transform 0.12s ease,
+                        box-shadow 0.12s ease,
+                        border-color 0.12s ease;
+            will-change: left, transform;
+            z-index: 1;
+            /* 尺寸由JS动态设置 */
+        }
+        .card .main-label {
+            font-size: 18px;
+            font-weight: 700;
+            line-height: 1;
+            color: #1a1a1a;
+        }
+        .card .corner {
+            position: absolute;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            line-height: 1;
+            font-size: 9px;
+            font-weight: 700;
+        }
+        .card .corner-top {
+            top: 3px;
+            left: 4px;
+        }
+        .card .corner-bottom {
+            bottom: 3px;
+            right: 4px;
+            transform: rotate(180deg);
+        }
+        .card .corner .suit-icon {
+            font-size: 8px;
+        }
+        .card.red .main-label,
+        .card.red .corner {
+            color: #c43a3a;
+        }
+        .card.black .main-label,
+        .card.black .corner {
+            color: #1a1a1a;
+        }
+
+        .card.highlight {
+            border-color: #2b7be4;
+            box-shadow: 0 0 0 3px rgba(43, 123, 228, 0.5), 0 4px 12px rgba(0,0,0,0.3);
+            transform: translateY(-50%) translateY(-4px) scale(1.04);
+            z-index: 2;
+        }
+        .card.highlight-swap {
+            border-color: #e46b2b;
+            box-shadow: 0 0 0 3px rgba(228, 107, 43, 0.6), 0 4px 12px rgba(0,0,0,0.3);
+            background: #fff3e8;
+            transform: translateY(-50%) translateY(-6px) scale(1.08);
+            z-index: 3;
+        }
+        .card.sorted-mark {
+            border-color: #3ba87a;
+            box-shadow: 0 0 0 2px rgba(59, 168, 122, 0.5);
+            background: #f0faf5;
+        }
+
+        .info-panel {
+            background: #e9eff5;
+            border-radius: 18px;
+            padding: 12px 18px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 18px;
+            border: 1px solid #d0dce8;
+        }
+        .info-panel .stats {
+            font-weight: 500;
+            color: #1f3a4b;
+            font-size: 14px;
+        }
+        .info-panel .stats span {
+            font-weight: 700;
+            background: white;
+            padding: 0 12px;
+            border-radius: 30px;
+            margin: 0 4px;
+            border: 1px solid #cbd8e6;
+        }
+        .desc-box {
+            background: white;
+            padding: 6px 16px;
+            border-radius: 40px;
+            color: #1a3b4f;
+            font-weight: 600;
+            font-size: 14px;
+            border: 1px solid #cbd8e6;
+            flex: 1;
+            min-width: 140px;
+            text-align: left;
+            box-shadow: inset 0 1px 4px rgba(0,0,0,0.02);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 4px;
+        }
+        .action-buttons button {
+            background: white;
+            border: 1px solid #cbd8e6;
+            padding: 8px 22px;
+            border-radius: 60px;
+            font-weight: 600;
+            font-size: 14px;
+            color: #1a3b4f;
+            cursor: pointer;
+            transition: all 0.15s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        }
+        .action-buttons button.primary {
+            background: #1a4b6d;
+            border-color: #1a4b6d;
+            color: white;
+            box-shadow: 0 6px 14px rgba(26, 75, 109, 0.25);
+        }
+        .action-buttons button.primary:hover {
+            background: #0f3854;
+            transform: scale(0.96);
+        }
+        .action-buttons button:disabled {
+            opacity: 0.35;
+            pointer-events: none;
+            filter: grayscale(0.3);
+        }
+        .action-buttons button:not(.primary):hover {
+            background: #dce5ee;
+        }
+
+        .footer-note {
+            margin-top: 16px;
+            font-size: 12px;
+            color: #4a6a83;
+            background: #e3ebf3;
+            padding: 6px 14px;
+            border-radius: 40px;
+            display: inline-block;
+        }
+
+        @media (max-width: 700px) {
+            .controls-row { flex-direction: column; align-items: stretch; gap: 8px; }
+            .controls-row label { justify-content: center; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>🃏 斗地主顺序 (3~2) · 物理滑动</h1>
+    <div class="subhead">牌数可调 · 高速自动播放 · 真实牌面 (3最小, 2最大)</div>
+
+    <!-- 控制栏 -->
+    <div class="controls-row">
+        <label>牌数 <input type="range" id="cardCountSlider" min="10" max="50" value="25"> <span class="value-badge" id="cardCountDisplay">25</span></label>
+        <label>速度(ms/步) <input type="range" id="speedSlider" min="50" max="500" value="120"> <span class="value-badge" id="speedDisplay">120</span></label>
+        <div class="algo-tabs">
+            <button data-algo="selection" class="active">选择</button>
+            <button data-algo="insertion">插入</button>
+            <button data-algo="quick">快速</button>
+        </div>
+    </div>
+
+    <!-- 牌桌 -->
+    <div id="tableWrapper" class="table-wrapper"></div>
+
+    <!-- 信息面板 -->
+    <div class="info-panel">
+        <div class="stats">📊 比较 <span id="compCount">0</span></div>
+        <div class="stats">🔄 交换 <span id="swapCount">0</span></div>
+        <div class="desc-box" id="stepDesc">准备就绪</div>
+        <div class="stats">步骤 <span id="stepIndex">0</span> / <span id="totalSteps">0</span></div>
+    </div>
+
+    <!-- 操作按钮 -->
+    <div class="action-buttons">
+        <button id="resetBtn">⟲ 重置</button>
+        <button id="prevBtn" disabled>◀ 上一步</button>
+        <button id="nextBtn" class="primary">下一步 ▶</button>
+        <button id="autoBtn">▶ 自动播放</button>
+    </div>
+    <div class="footer-note">💡 橙色高亮为正在交换 · 顺序：3,4,5,6,7,8,9,10,J,Q,K,A,2</div>
+</div>
+
+<script>
+    (function() {
+        // ---------- DOM refs ----------
+        const tableWrapper = document.getElementById('tableWrapper');
+        const compSpan = document.getElementById('compCount');
+        const swapSpan = document.getElementById('swapCount');
+        const descEl = document.getElementById('stepDesc');
+        const stepIdxSpan = document.getElementById('stepIndex');
+        const totalStepsSpan = document.getElementById('totalSteps');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const autoBtn = document.getElementById('autoBtn');
+
+        const cardCountSlider = document.getElementById('cardCountSlider');
+        const cardCountDisplay = document.getElementById('cardCountDisplay');
+        const speedSlider = document.getElementById('speedSlider');
+        const speedDisplay = document.getElementById('speedDisplay');
+
+        const algoTabs = document.querySelectorAll('.algo-tabs button');
+
+        // ---------- 斗地主顺序 (3最小, 2最大) ----------
+        const ORDER = ['3','4','5','6','7','8','9','10','J','Q','K','A','2'];
+        const SUITS = ['♠', '♥', '♦', '♣'];
+        function isRed(suit) { return suit === '♥' || suit === '♦'; }
+
+        // ---------- 状态 ----------
+        let currentAlgo = 'selection';
+        let steps = [];
+        let currentStepIdx = 0;
+        let autoTimer = null;
+        let cardMap = {};         // key: card.id -> DOM element
+        let currentCardData = [];
+
+        // 牌尺寸动态
+        let cardWidth = 36, cardHeight = 50, gap = 6;
+
+        function getCardCount() { return parseInt(cardCountSlider.value, 10); }
+        function getSpeed() { return parseInt(speedSlider.value, 10); }
+
+        // 生成随机牌 (斗地主顺序)
+        function generateRandomCards(count) {
+            const cards = [];
+            for (let i = 0; i < count; i++) {
+                const rank = Math.floor(Math.random() * 13); // 0~12 对应 ORDER 索引
+                const suit = SUITS[Math.floor(Math.random() * 4)];
+                cards.push({
+                    id: i,
+                    rank: rank,                 // 排序用
+                    label: ORDER[rank],         // 显示用
+                    suit: suit,
+                    isRed: isRed(suit)
+                });
+            }
+            return cards;
+        }
+
+        // ---------- 步骤生成器 (使用 rank 比较) ----------
+        function generateSteps(algo, cards) {
+            const arr = cards.map(c => ({ ...c }));
+            const stepsArr = [];
+            let comps = 0, swaps = 0;
+
+            function pushState(highlight = [], desc = '', extraComps = 0, extraSwaps = 0) {
+                comps += extraComps;
+                swaps += extraSwaps;
+                stepsArr.push({
+                    array: arr.map(c => ({ ...c })),
+                    highlight: highlight.slice(),
+                    desc: desc,
+                    comps: comps,
+                    swaps: swaps
+                });
+            }
+
+            pushState([], `初始: ${arr.map(c => c.label).join(' ')}`);
+
+            if (algo === 'selection') {
+                for (let i = 0; i < arr.length - 1; i++) {
+                    let minIdx = i;
+                    for (let j = i + 1; j < arr.length; j++) {
+                        pushState([i, j], `扫描 ${j}，比较 ${arr[j].label} 与当前最小 ${arr[minIdx].label}`, 1);
+                        if (arr[j].rank < arr[minIdx].rank) {
+                            minIdx = j;
+                        }
+                    }
+                    if (minIdx !== i) {
+                        [arr[i], arr[minIdx]] = [arr[minIdx], arr[i]];
+                        pushState([i, minIdx], `交换 ${arr[i].label} 和 ${arr[minIdx].label} (最小值归位)`, 0, 1);
+                    } else {
+                        pushState([i], `位置 ${i} 已是最小`, 0);
+                    }
+                }
+                pushState([], `✅ 选择排序完成！比较 ${comps} 次，交换 ${swaps} 次`);
+            } else if (algo === 'insertion') {
+                for (let i = 1; i < arr.length; i++) {
+                    let key = arr[i];
+                    let j = i - 1;
+                    if (j >= 0) {
+                        pushState([j, i], `比较 ${key.label} 与 ${arr[j].label}`, 1);
+                    }
+                    while (j >= 0 && arr[j].rank > key.rank) {
+                        arr[j + 1] = arr[j];
+                        j--;
+                        if (j >= 0) {
+                            pushState([j, j+1], `继续比较 ${key.label} 与 ${arr[j].label}`, 1);
+                        }
+                    }
+                    if (arr[j + 1].rank !== key.rank) {
+                        arr[j + 1] = { ...key };
+                        pushState([j + 1], `插入 ${key.label} 到位置 ${j+1}`, 0, 1);
+                    } else {
+                        pushState([i], `元素 ${key.label} 已在合适位置`, 0);
+                    }
+                }
+                pushState([], `✅ 插入排序完成！比较 ${comps} 次，交换 ${swaps} 次`);
+            } else if (algo === 'quick') {
+                let stack = [[0, arr.length - 1]];
+                while (stack.length > 0) {
+                    let [low, high] = stack.pop();
+                    if (low >= high) continue;
+                    let pivot = arr[low];
+                    let i = low, j = high;
+                    while (i < j) {
+                        while (i < j && arr[j].rank >= pivot.rank) {
+                            pushState([i, j], `右移 ${j}，值 ${arr[j].label} >= ${pivot.label}`, 1);
+                            j--;
+                        }
+                        if (i < j) {
+                            arr[i] = arr[j];
+                            pushState([i, j], `左移 ${arr[i].label}`, 0, 1);
+                        }
+                        while (i < j && arr[i].rank <= pivot.rank) {
+                            pushState([i, j], `左移 ${i}，值 ${arr[i].label} <= ${pivot.label}`, 1);
+                            i++;
+                        }
+                        if (i < j) {
+                            arr[j] = arr[i];
+                            pushState([i, j], `右移 ${arr[j].label}`, 0, 1);
+                        }
+                    }
+                    arr[i] = { ...pivot };
+                    pushState([i], `基准 ${pivot.label} 归位`, 0, 1);
+                    if (i + 1 < high) stack.push([i + 1, high]);
+                    if (low < i - 1) stack.push([low, i - 1]);
+                }
+                pushState([], `✅ 快速排序完成！比较 ${comps} 次，交换 ${swaps} 次`);
+            }
+            return stepsArr;
+        }
+
+        // ---------- 更新牌尺寸 ----------
+        function updateCardSize(count) {
+            const containerWidth = tableWrapper.clientWidth || 800;
+            const padding = 20;
+            const available = containerWidth - padding * 2;
+            let idealWidth = Math.min(60, (available - (count-1) * 6) / count);
+            idealWidth = Math.max(24, Math.min(70, idealWidth));
+            cardWidth = idealWidth;
+            cardHeight = cardWidth * 1.4;
+            gap = Math.max(4, Math.min(12, cardWidth * 0.15));
+            document.querySelectorAll('.card').forEach(el => {
+                el.style.width = cardWidth + 'px';
+                el.style.height = cardHeight + 'px';
+                const main = el.querySelector('.main-label');
+                if (main) main.style.fontSize = Math.min(22, cardWidth * 0.5) + 'px';
+                const corners = el.querySelectorAll('.corner');
+                corners.forEach(c => {
+                    c.style.fontSize = Math.max(7, cardWidth * 0.2) + 'px';
+                    const icon = c.querySelector('.suit-icon');
+                    if (icon) icon.style.fontSize = Math.max(6, cardWidth * 0.18) + 'px';
+                });
+            });
+        }
+
+        // ---------- 渲染步骤 ----------
+        function renderStep(index) {
+            if (!steps.length || index < 0 || index >= steps.length) return;
+            const step = steps[index];
+            const cards = step.array;
+            const highlight = step.highlight || [];
+
+            const totalWidth = cards.length * (cardWidth + gap) - gap;
+            const containerWidth = tableWrapper.clientWidth || 800;
+            const startX = Math.max(8, (containerWidth - totalWidth) / 2);
+
+            cards.forEach((card, idx) => {
+                let el = cardMap[card.id];
+                if (!el) {
+                    el = createCardElement(card);
+                    tableWrapper.appendChild(el);
+                    cardMap[card.id] = el;
+                }
+                const targetLeft = startX + idx * (cardWidth + gap);
+                el.style.left = targetLeft + 'px';
+                el.classList.remove('highlight', 'highlight-swap', 'sorted-mark');
+                if (highlight.includes(idx)) {
+                    if (step.desc.includes('交换') || step.desc.includes('左移') || step.desc.includes('右移')) {
+                        el.classList.add('highlight-swap');
+                    } else {
+                        el.classList.add('highlight');
+                    }
+                }
+                if (index === steps.length - 1 && step.desc.includes('完成')) {
+                    el.classList.add('sorted-mark');
+                }
+            });
+
+            const currentIds = new Set(cards.map(c => c.id));
+            Object.keys(cardMap).forEach(id => {
+                if (!currentIds.has(Number(id))) {
+                    const el = cardMap[id];
+                    if (el && el.parentNode) el.parentNode.removeChild(el);
+                    delete cardMap[id];
+                }
+            });
+
+            compSpan.textContent = step.comps || 0;
+            swapSpan.textContent = step.swaps || 0;
+            descEl.textContent = step.desc || '';
+            stepIdxSpan.textContent = index + 1;
+            totalStepsSpan.textContent = steps.length;
+
+            prevBtn.disabled = (index === 0);
+            nextBtn.disabled = (index === steps.length - 1);
+            if (index === steps.length - 1) {
+                autoBtn.textContent = '⏹ 完成';
+            } else {
+                autoBtn.textContent = '▶ 自动播放';
+            }
+            currentCardData = cards;
+        }
+
+        // ---------- 创建单张牌 DOM ----------
+        function createCardElement(card) {
+            const div = document.createElement('div');
+            div.className = `card ${card.isRed ? 'red' : 'black'}`;
+            div.dataset.id = card.id;
+            div.style.width = cardWidth + 'px';
+            div.style.height = cardHeight + 'px';
+
+            const cornerTop = document.createElement('div');
+            cornerTop.className = 'corner corner-top';
+            cornerTop.innerHTML = `<span>${card.label}</span><span class="suit-icon">${card.suit}</span>`;
+            div.appendChild(cornerTop);
+
+            const mainLabel = document.createElement('div');
+            mainLabel.className = 'main-label';
+            mainLabel.textContent = card.label;
+            mainLabel.style.fontSize = Math.min(22, cardWidth * 0.5) + 'px';
+            div.appendChild(mainLabel);
+
+            const cornerBottom = document.createElement('div');
+            cornerBottom.className = 'corner corner-bottom';
+            cornerBottom.innerHTML = `<span>${card.label}</span><span class="suit-icon">${card.suit}</span>`;
+            div.appendChild(cornerBottom);
+
+            const corners = div.querySelectorAll('.corner');
+            corners.forEach(c => {
+                c.style.fontSize = Math.max(7, cardWidth * 0.2) + 'px';
+                const icon = c.querySelector('.suit-icon');
+                if (icon) icon.style.fontSize = Math.max(6, cardWidth * 0.18) + 'px';
+            });
+
+            return div;
+        }
+
+        // ---------- 加载算法 ----------
+        function loadAlgorithm(algo, cardCount) {
+            if (autoTimer) {
+                clearInterval(autoTimer);
+                autoTimer = null;
+                autoBtn.textContent = '▶ 自动播放';
+            }
+            currentAlgo = algo;
+            algoTabs.forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.algo === algo);
+            });
+
+            tableWrapper.innerHTML = '';
+            cardMap = {};
+
+            const cards = generateRandomCards(cardCount);
+            steps = generateSteps(algo, cards);
+            currentStepIdx = 0;
+
+            updateCardSize(cardCount);
+            requestAnimationFrame(() => {
+                renderStep(currentStepIdx);
+            });
+        }
+
+        function resetAndLoad() {
+            const count = getCardCount();
+            loadAlgorithm(currentAlgo, count);
+        }
+
+        // ---------- 事件绑定 ----------
+        algoTabs.forEach(btn => {
+            btn.addEventListener('click', function() {
+                const algo = this.dataset.algo;
+                if (algo === currentAlgo) return;
+                loadAlgorithm(algo, getCardCount());
+            });
+        });
+
+        cardCountSlider.addEventListener('input', function() {
+            cardCountDisplay.textContent = this.value;
+        });
+        cardCountSlider.addEventListener('change', resetAndLoad);
+
+        speedSlider.addEventListener('input', function() {
+            speedDisplay.textContent = this.value;
+        });
+
+        nextBtn.addEventListener('click', function() {
+            if (currentStepIdx < steps.length - 1) {
+                currentStepIdx++;
+                renderStep(currentStepIdx);
+            }
+            if (currentStepIdx === steps.length - 1 && autoTimer) {
+                clearInterval(autoTimer);
+                autoTimer = null;
+                autoBtn.textContent = '⏹ 完成';
+            }
+        });
+
+        prevBtn.addEventListener('click', function() {
+            if (currentStepIdx > 0) {
+                currentStepIdx--;
+                renderStep(currentStepIdx);
+                if (autoTimer) {
+                    clearInterval(autoTimer);
+                    autoTimer = null;
+                    autoBtn.textContent = '▶ 自动播放';
+                }
+            }
+        });
+
+        resetBtn.addEventListener('click', resetAndLoad);
+
+        autoBtn.addEventListener('click', function() {
+            if (autoTimer) {
+                clearInterval(autoTimer);
+                autoTimer = null;
+                autoBtn.textContent = '▶ 自动播放';
+                return;
+            }
+            if (currentStepIdx === steps.length - 1) {
+                resetAndLoad();
+                setTimeout(() => { autoBtn.click(); }, 100);
+                return;
+            }
+            autoBtn.textContent = '⏸ 暂停';
+            const speed = getSpeed();
+            autoTimer = setInterval(() => {
+                if (currentStepIdx < steps.length - 1) {
+                    currentStepIdx++;
+                    renderStep(currentStepIdx);
+                } else {
+                    clearInterval(autoTimer);
+                    autoTimer = null;
+                    autoBtn.textContent = '⏹ 完成';
+                }
+            }, speed);
+        });
+
+        // 窗口 resize
+        let resizeTimer;
+        window.addEventListener('resize', function() {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(() => {
+                if (steps.length && currentStepIdx < steps.length) {
+                    updateCardSize(getCardCount());
+                    renderStep(currentStepIdx);
+                }
+            }, 200);
+        });
+
+        // ---------- 启动 ----------
+        cardCountSlider.value = '25';
+        cardCountDisplay.textContent = '25';
+        speedSlider.value = '120';
+        speedDisplay.textContent = '120';
+        loadAlgorithm('selection', 25);
+    })();
+</script>
+</body>
+</html>
